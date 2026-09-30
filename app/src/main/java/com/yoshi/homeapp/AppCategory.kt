@@ -37,7 +37,6 @@ enum class AppCategory(val label: String) {
                 ApplicationInfo.CATEGORY_PRODUCTIVITY -> return PRODUCTIVITY
                 ApplicationInfo.CATEGORY_ACCESSIBILITY -> return ACCESSIBILITY
             }
-            if ((info.flags and ApplicationInfo.FLAG_GAME) != 0) return GAME
             guessFromPackage(info.packageName)?.let { return it }
             val isSystem = (info.flags and ApplicationInfo.FLAG_SYSTEM) != 0
             return if (isSystem) UTILITY else OTHER
