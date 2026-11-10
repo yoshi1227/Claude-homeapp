@@ -50,7 +50,7 @@ fun AppMenuDialog(
     val favoriteIndex = state.settings.favorites.indexOf(app.key)
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = { LetterIcon(label = app.label, colorSeed = app.packageName, size = 48.dp) },
+        icon = { AppIconImage(app = app, size = 48.dp) },
         title = { Text(app.label) },
         text = {
             Column {

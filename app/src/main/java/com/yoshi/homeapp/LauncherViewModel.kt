@@ -24,8 +24,8 @@ data class LauncherUiState(
 
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = AppRepository(application)
     val prefs = LauncherPrefs(application)
+    private val repository = AppRepository(application, viewModelScope)
 
     val uiState: StateFlow<LauncherUiState> =
         combine(repository.apps, prefs.settings) { apps, settings ->

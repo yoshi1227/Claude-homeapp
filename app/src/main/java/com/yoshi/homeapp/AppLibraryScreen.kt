@@ -165,7 +165,7 @@ private fun MiniGrid(apps: List<AppEntry>, size: Dp, onClick: () -> Unit) {
                 for (col in 0 until 2) {
                     val app = apps.getOrNull(row * 2 + col)
                     if (app != null) {
-                        LetterIcon(label = app.label, colorSeed = app.packageName, size = small)
+                        AppIconImage(app = app, size = small)
                     } else {
                         Spacer(Modifier.size(small))
                     }

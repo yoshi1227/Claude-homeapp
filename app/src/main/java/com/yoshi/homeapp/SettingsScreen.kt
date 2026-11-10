@@ -1,6 +1,5 @@
 package com.yoshi.homeapp
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,19 +48,6 @@ fun SettingsScreen(
                     }
                 }
 
-                item { SectionTitle("アプリ一覧を開くスワイプ") }
-                item {
-                    RadioRow("右スワイプ（指を左から右へ）", state.settings.swipeRightForLibrary) {
-                        prefs.setSwipeRightForLibrary(true)
-                    }
-                }
-                item {
-                    RadioRow("左スワイプ（指を右から左へ）", !state.settings.swipeRightForLibrary) {
-                        prefs.setSwipeRightForLibrary(false)
-                    }
-                }
-
-                item { HorizontalDivider(Modifier.padding(vertical = 8.dp)) }
                 item { SectionTitle("非表示のアプリ（${state.hiddenApps.size}）") }
                 if (state.hiddenApps.isEmpty()) {
                     item {
@@ -79,7 +64,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp),
                     ) {
-                        LetterIcon(label = app.label, colorSeed = app.packageName, size = 40.dp)
+                        AppIconImage(app = app, size = 40.dp)
                         Text(app.label, modifier = Modifier.weight(1f))
                         OutlinedButton(onClick = { prefs.setHidden(app.key, false) }) { Text("表示する") }
                     }
@@ -113,15 +98,4 @@ private fun SectionTitle(text: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
     )
-}
-
-@Composable
-private fun RadioRow(text: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 8.dp),
-    ) {
-        RadioButton(selected = selected, onClick = onClick)
-        Text(text)
-    }
 }

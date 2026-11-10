@@ -4,6 +4,9 @@ import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+/** ホーム画面に置いたウィジェット。 */
+data class WidgetConfig(val id: Int, val heightDp: Int)
+
 data class LauncherSettings(
     /** 非表示にしたアプリのキー。 */
     val hidden: Set<String> = emptySet(),
@@ -11,11 +14,8 @@ data class LauncherSettings(
     val favorites: List<String> = emptyList(),
     /** ユーザーが手動で変更したカテゴリー。 */
     val categoryOverrides: Map<String, AppCategory> = emptyMap(),
-    /**
-     * true: 右スワイプ（指を左から右へ）でアプリ一覧を開く。
-     * false: 左スワイプ（指を右から左へ）でアプリ一覧を開く。
-     */
-    val swipeRightForLibrary: Boolean = true,
+    /** ホーム画面のウィジェット（上から順）。 */
+    val widgets: List<WidgetConfig> = emptyList(),
 )
 
 /** 設定を SharedPreferences に保存する。 */
@@ -37,7 +37,12 @@ class LauncherPrefs(context: Context) {
                 val category = AppCategory.fromName(entry.substring(index + 1)) ?: return@mapNotNull null
                 entry.substring(0, index) to category
             }.toMap(),
-        swipeRightForLibrary = prefs.getBoolean(KEY_SWIPE_RIGHT, true),
+        widgets = prefs.getString(KEY_WIDGETS, "").orEmpty()
+            .split(SEPARATOR)
+            .mapNotNull { entry ->
+                val (id, height) = entry.split(':').takeIf { it.size == 2 } ?: return@mapNotNull null
+                WidgetConfig(id.toIntOrNull() ?: return@mapNotNull null, height.toIntOrNull() ?: return@mapNotNull null)
+            },
     )
 
     private fun update(transform: (LauncherSettings) -> LauncherSettings) {
@@ -46,7 +51,7 @@ class LauncherPrefs(context: Context) {
             .putStringSet(KEY_HIDDEN, next.hidden)
             .putString(KEY_FAVORITES, next.favorites.joinToString(SEPARATOR))
             .putStringSet(KEY_CATEGORIES, next.categoryOverrides.map { (k, v) -> "$k=${v.name}" }.toSet())
-            .putBoolean(KEY_SWIPE_RIGHT, next.swipeRightForLibrary)
+            .putString(KEY_WIDGETS, next.widgets.joinToString(SEPARATOR) { "${it.id}:${it.heightDp}" })
             .apply()
         _settings.value = next
     }
@@ -81,13 +86,30 @@ class LauncherPrefs(context: Context) {
 
     fun resetCategories() = update { it.copy(categoryOverrides = emptyMap()) }
 
-    fun setSwipeRightForLibrary(value: Boolean) = update { it.copy(swipeRightForLibrary = value) }
+    fun addWidget(id: Int, heightDp: Int) = update {
+        it.copy(widgets = it.widgets.filter { w -> w.id != id } + WidgetConfig(id, heightDp))
+    }
+
+    fun removeWidget(id: Int) = update { it.copy(widgets = it.widgets.filter { w -> w.id != id }) }
+
+    fun setWidgetHeight(id: Int, heightDp: Int) = update {
+        it.copy(widgets = it.widgets.map { w -> if (w.id == id) w.copy(heightDp = heightDp) else w })
+    }
+
+    fun moveWidget(id: Int, offset: Int) = update {
+        val list = it.widgets.toMutableList()
+        val from = list.indexOfFirst { w -> w.id == id }
+        val to = from + offset
+        if (from < 0 || to !in list.indices) return@update it
+        list.add(to, list.removeAt(from))
+        it.copy(widgets = list)
+    }
 
     private companion object {
         const val KEY_HIDDEN = "hidden"
         const val KEY_FAVORITES = "favorites"
         const val KEY_CATEGORIES = "category_overrides"
-        const val KEY_SWIPE_RIGHT = "swipe_right_for_library"
+        const val KEY_WIDGETS = "widgets"
         const val SEPARATOR = "\n"
     }
 }
